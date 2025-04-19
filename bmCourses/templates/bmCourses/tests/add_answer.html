@@ -1,0 +1,105 @@
+{% extends 'bmCourses/base/base.html' %}
+{% load widget_tweaks %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <!-- Заголовок и информация о тесте -->
+            <h1 class="mb-4 display-5 fw-bold">{{title}}</h1>
+            <div class="card mb-4 shadow-sm">
+                <div class="card-body">
+                    <h2 class="h5 card-title">Текущий тест: <span class="text-primary">{{test.title}}</span></h2>
+                    <h2 class="h5 card-title">Текущий вопрос: <span class="text-primary">{{question.text}}</span></h2>
+                </div>
+            </div>
+
+            <!-- Форма добавления ответа -->
+            <div class="card shadow-lg mb-4">
+                <div class="card-body">
+                    <form action="{% url 'answer_create' question.id %}" method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        <!-- Общие ошибки -->
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger mb-4">
+                            {{form.non_field_errors}}
+                        </div>
+                        {% endif %}
+
+                        <!-- Поля формы -->
+                        {% for f in form %}
+                        {% if f.name != 'is_correct' or not form.is_correct.is_hidden %}
+                        <div class="mb-3">
+                            {% if f.name == "is_correct" %}
+                            <div class="form-check">
+                                {{ f|add_class:"form-check-input" }}
+                                <label class="form-check-label" for="{{ f.id_for_label }}">
+                                    {{ f.label }}
+                                </label>
+                            </div>
+                            {% else %}
+                            <label for="{{f.id_for_label}}" class="form-label fw-bold">
+                                {{f.label}}:
+                            </label>
+                            {{ f|add_class:"form-control" }}
+                            {% endif %}
+                            <div class="form-text text-muted">{{f.help_text}}</div>
+                            <div class="form-error text-danger">{{f.errors}}</div>
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+
+                        {{form.course}}
+
+                        <!-- Кнопки действий -->
+                        <div class="d-flex flex-wrap gap-2 mt-4">
+                            <button type="submit" name="add_answer" class="btn btn-outline-primary flex-grow-1">
+                                <i class="bi bi-plus-circle me-1"></i> Добавить ответ
+                            </button>
+                            <button type="submit" name="add_question" class="btn btn-outline-secondary flex-grow-1">
+                                <i class="bi bi-plus-square me-1"></i> Новый вопрос
+                            </button>
+                            <button type="submit" name="finish" class="btn btn-success flex-grow-1">
+                                <i class="bi bi-check-circle me-1"></i> Завершить
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Предварительный просмотр теста -->
+            <h2 class="mb-4 border-bottom pb-2">Предварительный просмотр теста</h2>
+
+            {% for question in test.questions.all %}
+            <div class="card mb-3 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-2">
+                        <span class="badge bg-primary me-2">{{ forloop.counter }}</span>
+                        <h5 class="mb-0">{{ question.text }}</h5>
+                    </div>
+
+                    <div class="answers ps-4">
+                        <h6 class="text-muted mb-2">Варианты ответов:</h6>
+                        <div class="list-group">
+                            {% for answer in question.answers.all %}
+                            <div class="list-group-item {% if answer.is_correct %}list-group-item-success{% endif %}">
+                                <div class="d-flex align-items-center">
+                                    {% if answer.is_correct %}
+                                    <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                    {% else %}
+                                    <i class="bi bi-circle text-muted me-2"></i>
+                                    {% endif %}
+                                    {{ answer.text }}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

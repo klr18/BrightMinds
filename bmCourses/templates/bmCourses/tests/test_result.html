@@ -1,0 +1,48 @@
+{% extends 'bmCourses/base/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>{{ title }}</h1>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <p class="card-text">
+                <strong>Всего вопросов в тесте:</strong> {{ total_questions }}<br>
+                <strong>Процент правильных ответов:</strong> {{ percent_correct }}%
+            </p>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <h3>Детальный разбор:</h3>
+        {% for b in breakdowns %}
+            <div class="card mb-3 shadow-sm">
+                <div class="card-body">
+                    <p><strong>{{ forloop.counter }}. {{ b.question.text }}</strong></p>
+
+                    <p class="mb-1">
+                        <span class="text-success fw-semibold">✔ Правильный ответ:</span>
+                        {% for a in b.correct %}
+                            <span class="badge bg-success">{{ a.text }}</span>
+                        {% endfor %}
+                    </p>
+
+                    <p>
+                        <span class="text-primary fw-semibold">📝 Ваш ответ:</span>
+                        {% if b.question.type == 'TI' %}
+                            <span class="badge bg-primary">{{ b.user_input }}</span>
+                        {% else %}
+                            {% for a in b.user_selected %}
+                                <span class="badge bg-primary">{{ a.text }}</span>
+                            {% empty %}
+                                <span class="text-muted">Не выбран</span>
+                            {% endfor %}
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        {% empty %}
+            <p>Нет вопросов для отображения.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends 'bmCourses/base/base.html' %}
+
+{% block content %}
+<div class="container">
+    <!-- Кнопка "Назад" -->
+    <a href="{{course.get_absolute_url}}" class="btn btn-outline-primary mb-3">
+        <i class="bi bi-arrow-left"></i> К списку уроков
+    </a>
+
+    <!-- Заголовок урока -->
+    <h1 class="mb-4">{{lesson.name}}</h1>
+
+    <!-- Видео-плеер -->
+    {% if lesson.video %}
+    <div class="ratio ratio-16x9 mb-4">
+        <video controls class="rounded shadow">
+            <source src="{{lesson.video.url}}" type="video/mp4">
+            Ваш браузер не поддерживает видео <code>video</code>.
+        </video>
+    </div>
+    {% endif %}
+
+    <!-- Описание урока -->
+    {% if lesson.description %}
+    <div class="card mb-4">
+        <div class="card-body">
+            <h2 class="card-title h5">Описание урока</h2>
+            <p class="card-text">{{lesson.description}}</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Содержание урока -->
+    <div class="card">
+        <div class="card-body">
+            <h2 class="card-title h5">Содержание урока</h2>
+            <div class="lesson-content">
+                {{lesson.content|linebreaks}}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

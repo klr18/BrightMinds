@@ -1,0 +1,65 @@
+{% extends 'bmCourses/base/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4 text-center">{{ title }}</h1>
+
+    {% if test.time_to_complete %}
+        <div class="alert alert-info text-center">
+            <strong>Оставшееся время: <span id="timer" class="text-danger"></span></strong>
+        </div>
+
+        <script>
+            let seconds = {{ test.time_to_complete }} * 60;
+            const timer = setInterval(() => {
+                if (seconds <= 0) {
+                    clearInterval(timer);
+                    alert("Время вышло! Отправляем ваши ответы...");
+                    document.querySelector("form").submit();
+                } else {
+                    seconds--;
+                    const minutes = Math.floor(seconds / 60);
+                    const sec = String(seconds % 60).padStart(2, '0');
+                    document.getElementById("timer").innerText = `${minutes}:${sec}`;
+                }
+            }, 1000);
+        </script>
+    {% endif %}
+
+    <form action="{% url 'test_detail' test.pk %}" method="post" enctype="multipart/form-data" class="border p-4 rounded shadow-sm bg-light">
+        {% csrf_token %}
+
+        {% for question in test.questions.all %}
+            <div class="question mb-4">
+                <p class="fw-bold">{{ forloop.counter }}. {{ question.text }}</p>
+
+                {% if question.type == 'SC' %}
+                    {% for answer in question.answers.all %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="question_{{ question.id }}" id="answer_{{ answer.id }}" value="{{ answer.id }}">
+                            <label class="form-check-label" for="answer_{{ answer.id }}">{{ answer.text }}</label>
+                        </div>
+                    {% endfor %}
+
+                {% elif question.type == 'MC' %}
+                    {% for answer in question.answers.all %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="question_{{ question.id }}" id="answer_{{ answer.id }}" value="{{ answer.id }}">
+                            <label class="form-check-label" for="answer_{{ answer.id }}">{{ answer.text }}</label>
+                        </div>
+                    {% endfor %}
+
+                {% elif question.type == 'TI' %}
+                    <input type="text" name="question_{{ question.id }}" class="form-control" placeholder="Введите ваш ответ...">
+                {% endif %}
+            </div>
+        {% endfor %}
+
+        <div class="text-center">
+            <button type="submit" class="btn btn-success btn-lg mt-3">
+                <i class="fas fa-check-circle me-1"></i> Отправить ответы
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

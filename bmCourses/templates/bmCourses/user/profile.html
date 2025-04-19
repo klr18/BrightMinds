@@ -1,0 +1,163 @@
+{% extends 'bmCourses/base/base.html' %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Заголовок профиля -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>{{ title }}</h1>
+        {% if is_own_profile %}
+        <span class="badge bg-info fs-6">Это ваш профиль</span>
+        {% endif %}
+    </div>
+
+    <!-- Карточка профиля -->
+    <div class="card mb-5 border-0 shadow-lg rounded-3">
+        <div class="card-body p-4">
+            <div class="d-flex align-items-center mb-4">
+                <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center"
+                     style="width: 60px; height: 60px;">
+                    <i class="bi bi-person-fill fs-3 text-primary"></i>
+                </div>
+                <h2 class="card-title ms-3 mb-0">{{ profile_user.username }}</h2>
+            </div>
+
+            <div class="row g-3">
+                {% if profile_user.first_name or profile_user.last_name %}
+                <div class="col-md-6">
+                    <div class="p-3 bg-light rounded">
+                        <h6 class="text-muted mb-1">Имя</h6>
+                        <p class="mb-0 fs-5">{{ profile_user.first_name }} {{ profile_user.last_name }}</p>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if profile_user.email %}
+                <div class="col-md-6">
+                    <div class="p-3 bg-light rounded">
+                        <h6 class="text-muted mb-1">Email</h6>
+                        <p class="mb-0 fs-5">{{ profile_user.email }}</p>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="col-md-6">
+                    <div class="p-3 bg-light rounded">
+                        <h6 class="text-muted mb-1">Дата регистрации</h6>
+                        <p class="mb-0 fs-5">{{ profile_user.date_joined|date:"d.m.Y" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Созданные курсы -->
+    {% if courses %}
+    <div class="card mb-5 border-0 shadow-sm">
+        <div class="card-body p-4">
+            <h3 class="h4 mb-4 text-secondary d-flex align-items-center">
+                <i class="bi bi-journal-bookmark-fill me-2"></i>Созданные курсы
+            </h3>
+            <div class="row g-3">
+                {% for c in courses %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow-sm hover-shadow transition-all">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <a href="{{ c.get_absolute_url }}"
+                                   class="text-decoration-none text-dark stretched-link">{{ c.title }}</a>
+                            </h5>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Подписки -->
+    {% if subscriptions %}
+    <div class="card mb-5 border-0 shadow-sm">
+        <div class="card-body p-4">
+            <h3 class="h4 mb-4 text-secondary d-flex align-items-center">
+                <i class="bi bi-bookmark-heart-fill me-2"></i>Подписки
+            </h3>
+            <div class="row g-3">
+                {% for s in subscriptions %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow-sm hover-shadow transition-all">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <a href="{{ s.course.get_absolute_url }}"
+                                   class="text-decoration-none text-dark stretched-link">{{ s.course.title }}</a>
+                            </h5>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Результаты тестов -->
+    {% if test_results and request.user == profile_user %}
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+            <h3 class="h4 mb-4 text-secondary d-flex align-items-center">
+                <i class="bi bi-award-fill me-2"></i>Результаты тестов
+            </h3>
+            <div class="list-group">
+                {% for t in test_results %}
+                <a href="{{ t.get_absolute_url }}"
+                   class="list-group-item list-group-item-action border-0 rounded-3 mb-2 shadow-sm hover-shadow transition-all">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-1">Тест "{{ t.test.title }}"</h5>
+                            <small class="text-muted">Дата прохождения: {{ t.completed_at }}</small>
+                        </div>
+                        {% widthratio t.score t.test.questions.count 100 as percent %}
+                        <span class="badge bg-success bg-opacity-10 text-success fs-6">
+                          {{ t.score }} из {{ t.test.questions.count }} баллов ({{ percent }}%)
+                        </span>
+
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <canvas id="performanceChart" width="400" height="200"></canvas>
+
+    <script>
+        const ctx = document.getElementById('performanceChart').getContext('2d');
+        const performanceChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: [{% for item in performance_data %}'{{ item.title }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+            datasets: [{
+              label: 'Успеваемость (%)',
+              data: [{% for item in performance_data %}{{ item.percent }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+              backgroundColor: 'rgba(40, 167, 69, 0.3)',
+              borderColor: 'rgba(40, 167, 69, 1)',
+              borderWidth: 1,
+            }]
+          },
+          options: {
+            scales: {
+              y: {
+                beginAtZero: true,
+                max: 100,
+                title: {
+                  display: true,
+                  text: 'Процент'
+                }
+              }
+            }
+          }
+        });
+    </script>
+
+    {% endif %}
+</div>
+{% endblock %}

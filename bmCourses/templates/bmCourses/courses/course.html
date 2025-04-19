@@ -1,0 +1,154 @@
+{% extends 'bmCourses/base/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container">
+    <h1 class="text-center">{{ course.title }}</h1>
+
+    <div class="row mt-4">
+        <div class="col-md-6">
+            {% if course.photo %}
+            <img class="img-fluid rounded shadow-sm" src="{{ course.photo.url }}" alt="Фото курса"
+                 style="object-fit: cover; width: 100%; height: 400px;">
+            {% endif %}
+        </div>
+        <div class="col-md-6">
+            <p class="lead">{{ course.description }}</p>
+            <p class="lead">
+                Автор курса:
+                <strong>
+                    <a href="{% url 'profile' user.username %}" class="text-decoration-none text-primary fw-semibold">
+                        <i class="bi bi-person-circle me-1"></i>{{ user.username }}
+                    </a>
+                </strong>
+            </p>
+
+            {% if request.user.is_authenticated and request.user != user %}
+            <button
+                    id="subscribe-btn"
+                    class="btn {% if is_subscribed %}btn-danger{% else %}btn-success{% endif %} btn-lg mt-3"
+                    data-course-id="{{ course.slug }}">
+
+                {% if is_subscribed %}Отписаться{% else %}Подписаться{% endif %}
+            </button>
+            {% endif %}
+
+            <p class="lead mt-4 mb-1">Подписчики:</p>
+
+            <ul class="list-inline">
+                {% for subscriber in subscribers|slice:":3" %}
+                <li class="list-inline-item me-2">
+                    <a href="{% url 'profile' subscriber.username %}" class="text-decoration-none">
+                        <i class="bi bi-person-fill me-1"></i>{{ subscriber.username }}
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+
+            {% if subscribers|length > 3 %}
+            <!-- Кнопка для отображения полного списка -->
+            <button class="btn btn-link p-0 text-decoration-none" type="button" data-bs-toggle="collapse" data-bs-target="#all-subscribers"
+                    aria-expanded="false" aria-controls="all-subscribers">
+                Показать всех ({{ subscribers|length }})
+            </button>
+
+            <!-- Скрытый список -->
+            <div class="collapse mt-2" id="all-subscribers">
+                <ul class="list-inline">
+                    {% for subscriber in subscribers %}
+                    <li class="list-inline-item me-2">
+                        <a href="{% url 'profile' subscriber.username %}" class="text-decoration-none">
+                            <i class="bi bi-person me-1"></i>{{ subscriber.username }}
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <script>
+                document.getElementById('subscribe-btn').addEventListener('click', function() {
+                    const courseId = this.getAttribute('data-course-id');
+                    fetch(`/course/${courseId}/subscribe/`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}',
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({})
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'subscribed') {
+                            this.textContent = 'Отписаться';
+                            this.classList.remove('btn-success');
+                            this.classList.add('btn-danger');
+                        } else {
+                            this.textContent = 'Подписаться';
+                            this.classList.remove('btn-danger');
+                            this.classList.add('btn-success');
+                        }
+                    });
+                });
+            </script>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="mt-5">
+        {% if request.user == user %}
+        <div class="mb-3">
+            <a class="btn btn-primary" href="{% url 'add_lesson' course.slug %}">Добавить урок</a>
+            <a class="btn btn-warning ms-2" href="{% url 'test_create' course.slug %}">Добавить тест</a>
+        </div>
+        {% endif %}
+
+        {% if lessons %}
+        <h2 class="my-4">Уроки</h2>
+        <div class="row row-cols-1">
+            {% for l in lessons %}
+            <div class="col-md-12 mb-4">
+                <div class="card shadow-sm d-flex flex-row align-items-center justify-content-between p-3">
+                    <div class="card-body">
+                        <h5 class="card-title mb-2">
+                            <a href="{{ l.get_absolute_url }}" class="text-decoration-none text-dark">
+                                {{ l.name }}
+                            </a>
+                        </h5>
+                        <p class="card-text text-muted mb-0">{{ l.description }}</p>
+                    </div>
+                    <a href="{{ l.get_absolute_url }}">
+                        <img src="{% static 'bmCourses/images/next.png' %}" alt="Перейти"
+                             style="width: 40px; height: 40px;">
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if tests %}
+        <h2 class="my-4">Тесты</h2>
+        <div class="row row-cols-1">
+            {% for t in tests %}
+            <div class="col-md-12 mb-4">
+                <div class="card shadow-sm d-flex flex-row align-items-center justify-content-between p-3">
+                    <div class="card-body">
+                        <h5 class="card-title mb-2">
+                            <a href="{{ l.get_absolute_url }}" class="text-decoration-none text-dark">
+                                {{ t.title }}
+                            </a>
+                        </h5>
+                        <p class="card-text text-muted mb-0">{{ t.description }}</p>
+                    </div>
+                    <a href="{{ t.get_absolute_url }}">
+                        <img src="{% static 'bmCourses/images/next.png' %}" alt="Перейти"
+                             style="width: 40px; height: 40px;">
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

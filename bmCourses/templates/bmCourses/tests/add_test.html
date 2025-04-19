@@ -1,0 +1,45 @@
+{% extends 'bmCourses/base/base.html' %}
+{% load widget_tweaks %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10 col-lg-8">
+            <h1 class="mb-4 display-5 fw-bold">{{title}}</h1>
+
+            <div class="card shadow-lg">
+                <div class="card-body">
+                    <form action="{% url 'test_create' course.slug %}" method="post" enctype="multipart/form-data" novalidate>
+                        {% csrf_token %}
+
+                        {{ form.user.as_hidden }}
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                        {% endif %}
+
+                        {% for f in form %}
+                            <div class="mb-3">
+                                <label for="{{ f.id_for_label }}" class="form-label fw-bold">{{ f.label }}:</label>
+                                {{ f|add_class:"form-control" }}
+                                {% if f.errors %}
+                                <div class="text-danger small mt-1">{{ f.errors }}</div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+
+                        {{form.course}}
+
+                        <div class="d-grid">
+                            <button type="submit" name="add_question" class="btn btn-outline-secondary flex-grow-1">
+                                <i class="bi bi-plus-square me-1"></i> Добавить вопрос
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

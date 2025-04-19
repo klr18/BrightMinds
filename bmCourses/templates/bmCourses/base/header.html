@@ -1,0 +1,50 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm fixed-top py-3 fs-5">
+    <div class="container-fluid mx-5">
+        <a class="navbar-brand fw-bold text-warning me-5" href="{% url 'home' %}">
+            <div class="logo d-inline-block align-top me-2"></div>
+            BrightMinds
+        </a>
+        <div class="collapse navbar-collapse justify-content-between" id="navbarNav">
+            <ul class="navbar-nav">
+                {% for m in menu %}
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == m.get_absolute_url %}active fw-semibold text-primary{% endif %} me-3"
+                       href="{% url m.url_name %}">{{ m.title }}</a>
+                </li>
+                {% endfor %}
+            </ul>
+            <ul class="navbar-nav">
+                {% if request.user.is_staff %}
+                <li class="nav-item">
+                    <a class="nav-link fw-semibold" href="{% url 'admin:index' %}">
+                        <i class="bi bi-gear-fill me-1"></i>Админ-панель
+                    </a>
+                </li>
+                {% endif %}
+                {% if request.user.is_authenticated %}
+                <li class="nav-item">
+                    <a class="nav-link fw-semibold ms-3" href="{% url 'profile' request.user.username %}">
+                        <i class="bi bi-person-circle me-1"></i>{{ request.user.username }}
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-danger ms-3" href="{% url 'logout' %}">
+                        <i class="bi bi-box-arrow-right me-1"></i>Выйти
+                    </a>
+                </li>
+                {% else %}
+                <li class="nav-item">
+                    <a class="nav-link ms-3" href="{% url 'register' %}">
+                        <i class="bi bi-person-plus me-2"></i>Регистрация
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link ms-3" href="{% url 'login' %}">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>Войти
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>
